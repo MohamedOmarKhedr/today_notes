@@ -4,10 +4,13 @@ import 'package:table_calendar/table_calendar.dart';
 
 // ignore: must_be_immutable
 class NotesCalenderTable extends StatefulWidget {
-  DateTime selectedDate;
+  final DateTime selectedDate;
+  final Function(DateTime) onDateSelectedCallback;
+
   NotesCalenderTable({
     Key? key,
     required this.selectedDate,
+    required this.onDateSelectedCallback,
   }) : super(key: key);
 
   @override
@@ -15,39 +18,43 @@ class NotesCalenderTable extends StatefulWidget {
 }
 
 class _NotesCalenderTableState extends State<NotesCalenderTable> {
-  DateTime date = DateTime.now();
-
+  // DateTime date = DateTime.now(); // This 'date' variable seems unused.
   CalendarFormat _calendarFormat = CalendarFormat.week;
 
   @override
   Widget build(BuildContext context) {
+    final DateTime now = DateTime.now();
+    // Ensure firstDay and lastDay calculations do not cause issues if selectedDate is at an extreme.
+    // It's safer to base them on DateTime.now() or fixed reasonable points.
+    final DateTime firstDay = DateTime.utc(now.year - 2, 1, 1); // Two years back from current year
+    final DateTime lastDay = DateTime.utc(now.year + 2, 12, 31); // Two years forward from current year
+
     return TableCalendar(
       onFormatChanged: (format) {
         setState(() {
-          if (_calendarFormat == CalendarFormat.month) {
-            _calendarFormat = CalendarFormat.week;
-          } else {
-            _calendarFormat = CalendarFormat.month;
-          }
+          // This local state for calendar format is fine.
+          _calendarFormat = format;
         });
       },
       focusedDay: widget.selectedDate,
-      firstDay: DateTime(2023),
-      lastDay: DateTime(2024),
+      firstDay: firstDay,
+      lastDay: lastDay,
       calendarFormat: _calendarFormat,
-      onDaySelected: (
-        date,
-        events,
-      ) {
-        setState(() {
-          widget.selectedDate = date;
-        });
+      onDaySelected: (selectedDay, focusedDay) {
+        // Call the callback to notify AppCubit
+        widget.onDateSelectedCallback(selectedDay);
+        // No local setState for selectedDate here, as it's driven by AppCubit.
+        // If focusedDay needs immediate update before cubit state changes view:
+        // setState(() { _focusedDay = focusedDay; }); // Requires a local _focusedDay variable
       },
+      selectedDayPredicate: (day) {
+        return isSameDay(widget.selectedDate, day);
+      },
+      currentDay: now, // Highlight the actual current day
       availableCalendarFormats: const {
         CalendarFormat.month: 'Month',
         CalendarFormat.week: 'Week',
       },
-      currentDay: widget.selectedDate,
     );
   }
 }

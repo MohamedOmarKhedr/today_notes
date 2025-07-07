@@ -27,6 +27,14 @@ class AppCubit extends Cubit<AppState> {
     emit(GoToTodayState());
   }
 
+  void changeSelectedDay(DateTime newSelectedDay, {bool shouldUpdateStringDate = true}) {
+    selectedDay = newSelectedDay;
+    if (shouldUpdateStringDate) {
+      showDateSelectedByUser(newSelectedDay); // Keep this to update the formatted string
+    }
+    emit(AppSelectedDayChangedState());
+  }
+
   Future<void> showDateSelectedByUser(DateTime dateSelected) async {
     if (dateSelected.day.toString().length == 1 &&
         dateSelected.month.toString().length == 1) {
