@@ -27,6 +27,14 @@ class AppCubit extends Cubit<AppState> {
     emit(GoToTodayState());
   }
 
+  void changeSelectedDay(DateTime newSelectedDay, {bool shouldUpdateStringDate = true}) {
+    selectedDay = newSelectedDay;
+    if (shouldUpdateStringDate) {
+      showDateSelectedByUser(newSelectedDay); // Keep this to update the formatted string
+    }
+    emit(AppSelectedDayChangedState());
+  }
+
   Future<void> showDateSelectedByUser(DateTime dateSelected) async {
     if (dateSelected.day.toString().length == 1 &&
         dateSelected.month.toString().length == 1) {
@@ -74,15 +82,18 @@ class AppCubit extends Cubit<AppState> {
     List<String> notesDateslist = notesDatesSet.toList();
     notesDateslist.sort(
       (a, b) {
-        if (a.substring(6, 8) != b.substring(6, 8)) {
-          return int.parse(a.substring(6, 8))
-              .compareTo(int.parse(b.substring(6, 8)));
-        } else if (a.substring(3, 4) != b.substring(3, 4)) {
-          return int.parse(a.substring(3, 4))
-              .compareTo(int.parse(b.substring(3, 4)));
+        // Compare years (e.g., "YYYY" from "DD/MM/YYYY")
+        if (a.substring(6, 10) != b.substring(6, 10)) {
+          return int.parse(a.substring(6, 10))
+              .compareTo(int.parse(b.substring(6, 10)));
+        // Compare months (e.g., "MM" from "DD/MM/YYYY")
+        } else if (a.substring(3, 5) != b.substring(3, 5)) {
+          return int.parse(a.substring(3, 5))
+              .compareTo(int.parse(b.substring(3, 5)));
+        // Compare days (e.g., "DD" from "DD/MM/YYYY")
         } else {
-          return int.parse(a.substring(0, 1))
-              .compareTo(int.parse(b.substring(0, 1)));
+          return int.parse(a.substring(0, 2))
+              .compareTo(int.parse(b.substring(0, 2)));
         }
       },
     );
@@ -115,8 +126,6 @@ class AppCubit extends Cubit<AppState> {
         });
       },
       onOpen: (db) {
-        // TODO: get notes
-
         if (kDebugMode) {
           print("Notes Database opened");
         }
@@ -154,7 +163,8 @@ class AppCubit extends Cubit<AppState> {
       required String type}) async {
     await notesDatabase.transaction((txn) {
       return txn.rawInsert(
-          'INSERT INTO notes(title, discription, date, type, isChecked) VALUES ("$title","$discription","$date","$type","false")');
+          'INSERT INTO notes(title, discription, date, type, isChecked) VALUES (?, ?, ?, ?, ?)',
+          [title, discription, date, type, 'false']);
     }).then((value) {
       if (kDebugMode) {
         print("note $value successfully insert!");

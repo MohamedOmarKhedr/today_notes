@@ -35,3 +35,5 @@ class GetNotesDatesSetState extends AppState {}
 class GetNotesTheSameDateState extends AppState {}
 
 class SortDatesSetState extends AppState {}
+
+class AppSelectedDayChangedState extends AppState {}

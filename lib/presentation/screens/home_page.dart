@@ -52,7 +52,13 @@ class _HomePageState extends State<HomePage> {
             child: Column(
               children: [
                 NotesCalenderTable(
-                    selectedDate: AppCubit.get(context).selectedDay),
+                  selectedDate: AppCubit.get(context).selectedDay,
+                  onDateSelectedCallback: (newDate) {
+                    AppCubit.get(context).changeSelectedDay(newDate);
+                    // The changeSelectedDay method in AppCubit now also calls showDateSelectedByUser
+                    // so no need to call it separately here if that's the desired behavior.
+                  },
+                ),
                 Expanded(
                     child: NotesListBuilder(
                   notesDatesSet: notesDatesSet,
